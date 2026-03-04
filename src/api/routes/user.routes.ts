@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { UserController } from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
+import { validateSignup } from "../middlewares/validateSignup.middleware";
 
 const router = Router();
 
@@ -14,6 +15,8 @@ router.get("/", authMiddleware, UserController.getUsers);
  * @route   POST /api/users
  * @desc    Create new user
  */
-router.post("/", authMiddleware, UserController.createUser);
+router.post("/signup", validateSignup, UserController.createUser);
+
+router.post("/login" , UserController.loginUser);
 
 export default router;
