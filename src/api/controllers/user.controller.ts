@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 import { UserService } from "../../domain/services/user.service";
 import { ResponseUtil } from "../../infrastructure/utils/response.util";
 import { UploadedFile } from "express-fileupload";
+import { DocumentService } from "../../domain/services/document.service";
 const service = new UserService();
-
+const documentService = new DocumentService;
 export class UserController {
     static async getUsers(req: Request, res: Response) {
         const users = await service.getUsers();
@@ -12,23 +13,32 @@ export class UserController {
 
     static async createUser(req: Request, res: Response) {
         const { name, email, contact_number } = req.body;
-        let profile_pic: string | any = null ;
 
+        // 1️⃣ Create user first
+        const user = await service.createUser(
+            name,
+            email,
+            contact_number,
+            null
+        );
+
+        // 2️⃣ Upload profile pic if exists
         if (req.files && req.files.profile_pic) {
 
             const file = req.files.profile_pic as UploadedFile;
 
-            const uploadPath = `uploads/profile/${file.name}`;
+            await documentService.uploadDocument(
+                user.id,
+                "profile",
+                file
+            );
 
-            await file.mv(uploadPath);
             const baseUrl = process.env.BASE_URL;
+            const profilePicUrl = `${baseUrl}/uploads/profile/${file.name}`;
 
-            profile_pic = `${baseUrl}/uploads/profile/${file.name}`;
+            await service.updateProfilePic(user.id, profilePicUrl);
         }
 
-
-  
-        await service.createUser(name, email, contact_number, profile_pic);
-        return ResponseUtil.success(res, "User created");
+        return ResponseUtil.success(res, "User created successfully");
     }
 }
