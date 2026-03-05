@@ -5,6 +5,8 @@ import { UploadedFile } from "express-fileupload";
 import { DocumentService } from "../../domain/services/document.service";
 const service = new UserService();
 const documentService = new DocumentService;
+import { User } from "../../domain/entities/User";
+
 export class UserController {
     static async getUsers(req: Request, res: Response) {
         const users = await service.getUsers();
@@ -16,13 +18,18 @@ export class UserController {
 
             const { name, email, password, contact_number } = req.body;
 
-            // 1️⃣ Create user first
-            const user = await service.createUser(
+
+            const userData: User = {
                 name,
                 email,
                 password,
-                contact_number,
-                null
+                contactNumber: contact_number,
+                profilePic: undefined
+            };
+
+            // 1️⃣ Create user first
+            const user = await service.createUser(
+                userData
             );
 
             // 2️⃣ Upload profile pic if exists
@@ -53,9 +60,9 @@ export class UserController {
 
     static async loginUser(req: Request, res: Response) {
         try {
-            const { email, password } = req.body;
+            const { identifier, password} = req.body;
 
-            const result = await service.loginUser(email, password);
+            const result = await service.loginUser(identifier, password);
 
             return ResponseUtil.success(res, "Login successful", result);
 

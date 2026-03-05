@@ -1,5 +1,6 @@
 import { UserRepository } from "../repositories/user.repository";
 import bcrypt from "bcrypt";
+import { User } from "../entities/User";
 
 export class UserService {
     private repo = new UserRepository();
@@ -8,35 +9,36 @@ export class UserService {
         return this.repo.findAll();
     }
 
-   
+                                    
     async createUser(
-        name: string,
-        email: string,
-        password:string ,
-        contact_number: string,
-        profile_pic: string | null
+        user: User
     ) {
         // 🔎 Check if user already exists
-        const existingUser = await this.repo.findByEmail(email);
+        const existingUser = await this.repo.findByEmail(user.email);
 
         if (existingUser) {
             throw new Error("User already exists with this email");
         }
 
-        const existingContact = await this.repo.findByContactNumber(contact_number);
+        const existingContact = await this.repo.findByContactNumber(user.contactNumber);
 
         if (existingContact) {
             throw new Error("Contact number already exists");
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        const userr : User = {
+
+            name :user.name,
+            email :user.email,
+            password: hashedPassword,   // store hashed password
+            contactNumber: user.contactNumber,
+            profilePic: user.profilePic ?? ""
+
+        }
 
         return await this.repo.create(
-            name,
-            email,
-            hashedPassword,
-            contact_number,
-            profile_pic
+            userr
         );
     }
     
@@ -44,9 +46,10 @@ export class UserService {
         return await this.repo.updateProfilePic(userId, profilePic);
     }
 
-    async loginUser(email: string, password: string) {
+    async loginUser(identifier: string, password: string) {
 
-        const user = await this.repo.findByEmail(email);
+        
+        const user = await this.repo.findByEmailOrContact(identifier);
 
         if (!user) {
             throw new Error("Invalid credentials");

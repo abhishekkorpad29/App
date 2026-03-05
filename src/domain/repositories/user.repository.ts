@@ -8,24 +8,20 @@ export class UserRepository {
     }
 
     async create(
-        name: string,
-        email: string,
-        password: string,
-        contact_number: string,
-        profile_pic: string | null
+        user : User
     ) {
         const [result]: any = await pool.query(
             "INSERT INTO users (name, email ,password , contact_number, profile_pic) VALUES (?, ?,?, ?, ?)",
-            [name, email,password, contact_number, profile_pic]
+            [user.name,user.email,user.password,user.contactNumber,user.profilePic]
         );
 
         // 🔥 RETURN CREATED USER ID
         return {
             id: result.insertId,
-            name,
-            email,
-            contact_number,
-            profile_pic,
+            name: user.name,
+            email: user.email,
+            contactNumber: user.contactNumber,
+            profilePic: user.profilePic
         };
     }
 
@@ -54,5 +50,17 @@ export class UserRepository {
             [contact_number]
         );
         return rows[0];
+    }
+
+    async findByEmailOrContact(identifier: string): Promise<User | null> {
+
+        const [rows]: any = await pool.query(
+            `SELECT * FROM users 
+             WHERE email = ? OR contact_number = ?
+             LIMIT 1`,
+            [identifier, identifier]
+        );
+
+        return rows.length ? rows[0] : null;
     }
 }

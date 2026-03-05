@@ -4,7 +4,7 @@ import {
     validateEmail,
     validateContact,
     validatePassword
-} from "./validators/user.validators";
+} from "../../infrastructure/utils/validators/user.validators";
 
 export const validateSignup = (
     req: Request,
